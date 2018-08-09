@@ -11,6 +11,45 @@
 * 在进行很多页面高度或者宽度写死的情况，要注意多机型适配，基本上三种机型iPhone5s, iPhone6, iPhone7plus,iPhoneX
 * 对于复制过来的代码需要反复测试，各种情况都需要测试到，最好自己先mock所有不同类型的数据
 
+## 8.5 postman请求接口返回，但是用react.js写的h5拿到的接口返回数据有问题
+* 首先确定postman请求的接口正常是完全正确的
+* 请求接口的参数，token是由app传递到h5进行交互的
+* 如果把接口参数写死，前端访问就没有问题
+```
+/*公共方法，封装app传递的token*/
+getAppInfo: function (callback) {
+    window.document.addEventListener('message', (e) => {
+        const message = JSON.parse(e.data);
+        if (message && message.token) {
+            this.postMessage({
+                type: 'clearIntervalApp'
+            });
+            window.CMObject = message;
+            window.CMObject.token = message.token;
+        }
+    });
+    var timer = setInterval(() => {
+        if (window.CMObject && window.CMObject.token) {
+            timer && clearInterval(timer);
+            (callback && typeof(callback) === "function") && callback();
+        }
+    }, 100);
+},
+```
+```
+/*h5调用方法，获取到token*/
+this.getAppInfo(function(){
+    //这时候是可以拿到token值的，但是在这个方法里面，请求接口带token参数是有问题的
+    console.log(window.CMObject.token);
+})
+```
+* 如果将上述的调用方法改造成箭头函数就可以了
+```
+this.getAppInfo(()=>{
+  //在这里拿到token并请求接口，没有问题了
+})
+```
+
 ## 8.9 由一个空格导致的血案
 * 数据库配置h5链接时，手误添加了一个空格
 * 前端在请求后端接口的返回数据中，拿到了这个url, 肉眼可观是无空格的
